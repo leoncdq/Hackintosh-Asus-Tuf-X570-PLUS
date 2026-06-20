@@ -1,58 +1,51 @@
-# AMD X570 OpenCore 引导配置文件 (适用于 macOS Tahoe & Sequoia)
+# 华硕 TUF Gaming X570-PLUS 锐龙 AMD Ryzen macOS Tahoe & Sequoia 黑苹果 EFI
 
-专为 AMD Ryzen 锐龙处理器在 X570 芯片组主板平台定制、全面优化的高清全功能 OpenCore (v1.0.4+) 引导配置文件（EFI）。完美支持稳定引导 **macOS Tahoe (15.x)** 以及 **macOS Sequoia (15.x)**。
+[English](README.txt) | 简体中文
 
----
+本项目基于 OpenCore 1.0.7 引导，完美支持在 **ASUS TUF Gaming X570-PLUS** 主板、**AMD Ryzen 7 5800X3D** 处理器与 **AMD Radeon RX 560** 独立显卡平台上运行 **macOS Tahoe (15.x / 26.x)** 与 **macOS Sequoia (15.x)**。
 
-## 🌎 语言版本链接
-* **中文说明文件 (Chinese Version)：** [Readme-zh.txt](./Readme-zh.txt)
-* **英文说明文件 (English Version)：** [Readme.txt](./Readme.txt)
+本配置针对 macOS Sequoia 和 Tahoe 系统进行了深度的适配与调优，集成了原生电源管理、板载 Realtek ALCS1200A 声卡驱动，并通过 OCLP-Mod 免驱打补丁方式完美复活博通 BCM4360 无线网卡和蓝牙。
 
 ---
 
-## 🖥️ 推荐目标硬件配置
-* **主板：** AMD X570 芯片组系列主板 (AM4 插槽，如 华硕/微星/技嘉 等平台)
-* **处理器：** AMD Ryzen 锐龙系列中央处理器 (AM4 系列)
-* **集成声卡：** Realtek ALCS1200A 板载声卡芯片 (高清模拟音频)
-* **无线网卡：** 博通 Broadcom BCM4360 系列无线网卡（经典免驱网卡，新系统需 OCLP Root 补丁）
+## 💻 硬件配置与支持状态
+
+| 硬件组件 | 型号 | 驱动方式 | 状态 |
+| :--- | :--- | :--- | :--- |
+| **处理器 (CPU)** | AMD Ryzen 7 5800X3D | `AMDRyzenCPUPowerManagement.kext` + `SMCAMDProcessor.kext` | 完美电源管理与温度监控 |
+| **显卡 (dGPU)** | AMD Radeon RX 560 (Polaris) | 免驱（`WhateverGreen.kext` 辅助） | 完美图形加速 (Metal 3) |
+| **有线网卡** | Realtek RTL8111 Gigabit Ethernet | `RealtekRTL8111.kext` | 正常运行 |
+| **无线网卡** | Broadcom BCM4360 (PCIe 系列 / Fenvi) | OCLP-Mod (补回遗留驱动) + 内核注入 | 正常运行 (支持 Airdrop/Handoff) |
+| **蓝牙 (BT)** | Broadcom 内建蓝牙 | 原生支持 (通过 USBMap.kext 完美定制端口) | 正常运行 |
+| **声卡 (Audio)** | Realtek ALCS1200A | `AppleALC.kext` (Layout ID: 2) | 原生驱动 (前后置插孔正常输出) |
+| **存储 (NVMe)** | PCIe Gen4 NVMe 固态硬盘 | 原生支持 + `NVMeFix.kext` 功耗优化 | 正常运行 |
 
 ---
 
-## ✨ 核心优化与修复功能详情
+## 🛠️ macOS Tahoe & Sequoia 特殊配置说明 (必读)
 
-### 1. 内核底层与引导优化
-* **修正 `SetupVirtualMap` 为 `false`**：针对 AMD 平台的内存映射进行了最佳配置，彻底根治了类似 `StartImage failed - Aborted` 引起的开机引导卡死问题。
-* **桌面端标准 ACPI 补丁**：内置了适用于 AMD 台式机的精简 SSDT 表（如 `SSDT-EC-USBX.aml`），确保 USB 供电与基础电源管理正常。
+自 macOS Sequoia 和 Tahoe 开始，苹果彻底删除了老旧 Mac 所使用的博通免驱无线网卡驱动与部分传统 HDA 音频组件。为了使硬件驱动在这些新系统上完美运行，本项目在 `config.plist` 中做了以下关键的安全降级配置：
 
-### 2. 博通 BCM4360 无线网卡全功能复活
-针对 macOS Sequoia 及 Tahoe 彻底砍掉博通免驱网卡驱动的问题，本配置集成了完整的 OCLP 依赖链，实现无缝复苏：
-* **屏蔽原生 Skywalk 驱动**：在内核阻止（Block）中排除了原生 `com.apple.iokit.IOSkywalkFamily`，避免系统驱动冲突。
-* **按序注入遗留网卡驱动**：按严格的先后引导依赖顺序，依次加载注入 `IOSkywalkFamily.kext`、`IO80211FamilyLegacy.kext` 及子驱动 `AirPortBrcmNIC.kext`，完美还原底层驱动架构。
-* **完美适配 OCLP Root 补丁**：注入了 `AMFIPass.kext` 并配置了 `amfi=0x80` 启动参数与相应的 NVRAM 解锁参数（`csr-active-config`），确保用户进入系统后可以流畅地打入 OCLP-Mod 的 Root Patch 补丁。
+1. **禁用安全启动**：`SecureBootModel` 被设为 **`Disabled`**。
+   * *原因：这是使用 OCLP-Mod 写入内核驱动（Root Patch）且能正常开机引导的前提。若设为 `x86legacy` 或开启安全启动，会导致重启直接崩溃进入恢复模式。*
 
-### 3. ALCS1200A 板载集成声卡驱动
-* **声卡 Layout ID 注入**：在 `DeviceProperties` 中，为声卡物理路径 `PciRoot(0x0)/Pci(0x8,0x1)/Pci(0x0,0x4)` 精准注入了 `layout-id = 2`。
-* **原生音频输出支持**：通过 `AppleALC.kext` 驱动该芯片，使输入与输出设备（扬声器、耳机）在系统内能开箱即用。
+2. **放宽系统沙盒与签名**：`boot-args` 中加入了 **`amfi=0x80`**。
+   * *原因：运行未签名的无线网卡和声卡补丁驱动所必需。*
 
-### 4. 极致精美的 OpenCanopy Widescreen 图形界面
-* **HeiPG\Heikintosh 华丽主题**：默认启用美观奢华的 macOS 经典拟真图形启动菜单。
-* **字体缺失报错完美修复**：彻底解决了因缺少字体资源导致的 `OCUI: Font init failed` 报错，完整补全了官方必备的 6 个字体二进制及配置文件（`/EFI/OC/Resources/Font/`）。
-* **清理临时碎片**：清理了不必要的 macOS 属性碎片（如 `._` 文件），确保 FAT32 物理分区的 UEFI 极致兼容性。
-
-### 5. 经典 Mac 开机叮～声音 (Boot Chime)
-* **Pre-boot 阶段音频**：注入 `AudioDxe.efi` 驱动，并完整重构了 `UEFI -> Audio` 音频配置。
-* **采用无损 PCM 声音**：删除了破损且不支持的 `.mp3` 格式音频，部署了官方原版无损 `OCEFIAudio_VoiceOver_Boot.wav` 音频文件。
-* **前后置耳机音箱同时发声**：将 `AudioOutMask` 配置为 `-1`，使开机声音能同时发送至主板后置绿色音频孔以及机箱前置耳机插孔。
-* **NVRAM 自动音量恢复**：在 `NVRAM -> Add` 模板中注入 `SystemAudioVolume` 键值 `<data>Rg==</data>`（十进制约 70 黄金开机音量），并加入了 `NVRAM -> Delete` 清除列表。即使电脑执行 “Reset NVRAM” 选项，开机叮声依然能自动刷新并恢复。
-
-### 6. 开机 BIOS 与 OpenCore 菜单分辨率完美全屏
-* **画面黑边故障解决**：修复了在开机阶段因显卡 VBIOS 握手不成功而导致主板 Logo 画面与 OpenCore 图形选单退缩至 4:3 比例、两侧带有宽大黑边的问题。
-* **启用 `ForceResolution`**：将 `UEFI -> Output -> ForceResolution` 设置为 **`true`**，强行在引导加载阶段切换为显示器的最大物理分辨率。
-* **BIOS 参数同步**：在主板 BIOS 中关闭 **`Fast Boot`** 选项，成功让显卡能够正常与显示器握手。现在，主板 Logo 以及 OpenCore 菜单均能完美、全屏、高清铺满输出。
+3. **绕过升级与硬件检测限制**：使用了 `RestrictEvents.kext` 并配置了启动参数 **`revpatch=sb`**。
+   * *原因：在 `SecureBootModel` 禁用的状态下伪装安全启动，使系统能正常接收官方小版本增量更新 (OTA) 推送。*
 
 ---
 
-## ⚙️ 推荐主板 BIOS 设置
+## 🚀 安装与配置指引
+
+### 第一步：准备 EFI 与生成机型三码
+
+1. 将本项目整个 `EFI` 文件夹拷贝至您的启动盘 EFI 分区中。
+2. 使用 `GenSMBIOS` 或 `OCAuxiliaryTools` 生成适用于 **`MacPro7,1`** 或 **`iMacPro1,1`** 机型的三码（MLB, SystemSerialNumber, SystemUUID）。
+3. 用文本编辑器或配置工具打开 `/EFI/OC/config.plist`，填入 `PlatformInfo -> Generic` 下对应的位置。
+
+### 第二步：推荐主板 BIOS 设置
 为确保系统能顺利通过 UEFI 引导并正确握手全屏分辨率，请务必进行如下设置：
 * **CSM (兼容性支持模块)：** `Disabled` (关闭 - 开启此项是导致分辨率降低和大黑边的主要成因)
 * **Above 4G Decoding：** `Enabled` (开启)
@@ -60,10 +53,41 @@
 * **Re-Size BAR Support：** `Disabled` (关闭，或设为 `Auto`)
 * **Secure Boot (安全启动)：** `Disabled` (设为 “Other OS”)
 
+### 第三步：安装 macOS 系统
+1. 按照标准的黑苹果安装步骤通过 USB 启动盘安装系统。
+2. 首次进入系统后，您会发现 **WiFi 无法工作**，这是正常现象（因为博通驱动尚未注入）。请使用有线网卡或离线方式进行下一步。
+
+### 第四步：运行 OCLP-Mod 恢复博通无线网卡 (关键步骤)
+1. 下载并打开 **OCLP-Mod (OpenCore Legacy Patcher Mod)**。
+2. 点击 **Post-Install Root Patch** 按钮。
+3. 点击 **Start Root Patching** 并输入您的开机密码。软件将自动下载并补回博通无线网卡的系统级遗留驱动。
+4. **重启电脑**。在进入 OpenCore 引导菜单时，**务必执行一次 "Reset NVRAM" 重置**，随后引导进入系统。
+5. 此时进入系统后，您的博通 BCM4360 无线网卡与蓝牙将完美复活，支持原生 macOS Wi-Fi 控制和空投功能！
+
 ---
 
-## 🚀 使用方法说明
-1. 将本项目目录下的 `EFI` 文件夹，直接复制到您系统启动盘的 EFI 分区中。
-2. 使用专业的配置文件编辑器（如 OCAT 或 Xcode）打开 `/EFI/OC/config.plist`。
-3. 进入 `PlatformInfo -> Generic` 选项，根据您的显卡和处理器重新生成一组 SMBIOS 序列号（推荐使用 `iMacPro1,1` 或 `MacPro7,1`）。
-4. 保存配置，开机并在引导菜单中先执行一次 **"Reset NVRAM"** 重置选项，随后即可尽情体验高清无暇的 macOS 引导与运行环境！
+## ⚙️ 个性化调优 (可选)
+
+### 1. 修正“关于本机”中的 CPU 显示
+当前配置在 `boot-args` 中集成了 `revcpu=1` 和 `revcpuname=AMD Ryzen 7 5800X3D 8-Core Processor` 参数。这保证了在“关于本机”界面中能精准显示您的 CPU 完整型号，而不是显示 "Unknown" (未知)。您可以根据实际 CPU 型号自行更改 `revcpuname`。
+
+### 2. 关闭 Verbose 跑码模式 (纯净开机)
+默认情况下，为了便于排查问题，我们在 `boot-args` 中开启了 `-v` (跑码模式)。如果您想享受白苹果 Logo 的优雅开机画面：
+- 使用编辑器打开 `/EFI/OC/config.plist`，从 `NVRAM -> Add -> 7C436110-AB2A-4BBB-A880-FE41995C9F82 -> boot-args` 中删除 **`-v`** 即可。
+
+### 3. 开机 BIOS 与 OpenCore 选单分辨率完美全屏
+通过设置 `UEFI -> Output -> ForceResolution = true` 并在主板 BIOS 中关闭 `Fast Boot`。这成功解决了在开机阶段因显卡 VBIOS 握手问题导致 OpenCore 图形选单退缩至 4:3 比例、两侧带有宽大黑边的通病，开机菜单现在可以完美高清全屏铺满。
+
+### 4. 经典 Mac 开机 “叮～” 声音 (Boot Chime)
+我们已为您完全配置好 70% 黄金音量的开机声音：
+- 集成 `AudioDxe.efi` 驱动。
+- 部署官方无损 `OCEFIAudio_VoiceOver_Boot.wav` 于 `/EFI/OC/Resources/Audio/`。
+- 将 `AudioOutMask` 设置为 `-1`，使开机声音能同时发送至主板后置绿色音频孔与机箱前置耳机插孔。
+- 实现了 NVRAM 音量记忆。即使执行 "Reset NVRAM"，开机声音也能自动刷新并完美保留。
+
+---
+
+## 🤝 致谢
+* [Acidanthera](https://github.com/acidanthera) 提供 OpenCore 引导器及核心 Kext 驱动。
+* [Dortania](https://github.com/dortania) 提供行业标杆的 OpenCore 安装教程。
+* [OpenCore Legacy Patcher (OCLP-Mod) 团队](https://github.com/laobamac/OCLP-Mod) 解决 Sonoma/Sequoia/Tahoe 上的博通免驱网卡完美复活方案。
