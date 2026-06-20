@@ -7,8 +7,8 @@ An optimized, full-featured OpenCore (v1.0.4+) EFI configuration tailored for AM
 ---
 
 ## 🌎 Language Links
-* **[中文说明](./Readme-zh.txt)
-* **[English](./Readme.txt)
+* [中文说明](./Readme-zh.txt)
+* [English](./Readme.txt)
 
 ---
 
