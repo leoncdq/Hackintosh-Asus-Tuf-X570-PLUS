@@ -1,14 +1,14 @@
 # Hackintosh-Asus-Tuf-X570-PLUS
-Hackintosh Asus Tuf X570-PLUS OC1.0.7 Tahoe
+Hackintosh Asus Tuf X570-PLUS OC1.0.7 Tahoe 26.5.1
 # AMD X570 OpenCore EFI Configuration for macOS Tahoe & Sequoia
 
-An optimized, full-featured OpenCore (v1.0.4+) EFI configuration tailored for AMD Ryzen processors on X570 platform motherboards, fully supporting **macOS Tahoe (15.x)** and **macOS Sequoia (15.x)**.
+An optimized, full-featured OpenCore (v1.0.4+) EFI configuration tailored for AMD Ryzen processors on X570 platform motherboards, fully supporting **macOS Tahoe (26.5.x)** and **macOS Sequoia (15.x)**.
 
 ---
 
 ## 🌎 Language Links
-* **中文说明文件 (Chinese Version):** [Readme-zh.txt](./Readme-zh.txt)
-* **English Version:** [Readme.txt](./Readme.txt)
+* **[中文说明](./Readme-zh.txt)
+* **[English](./Readme.txt)
 
 ---
 
