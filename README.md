@@ -1,6 +1,6 @@
 # ASUS TUF Gaming X570-PLUS AMD Ryzen macOS Tahoe & Sequoia Hackintosh
 
-English | [简体中文](README-CN.txt)
+English | [简体中文](Readme-zh.txt)
 
 This project is based on OpenCore 1.0.7 and perfectly supports running **macOS Tahoe (15.x / 26.x)** and **macOS Sequoia (15.x)** on an **ASUS TUF Gaming X570-PLUS** motherboard with **AMD Ryzen 7 5800X3D** processor and **AMD Radeon RX 560** graphics card.
 
