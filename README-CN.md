@@ -1,8 +1,8 @@
 # 华硕 TUF Gaming X570-PLUS 锐龙 AMD Ryzen macOS Tahoe & Sequoia 黑苹果 EFI
 
-[English](README.txt) | 简体中文
+[English](README.md) | 简体中文
 
-本项目基于 OpenCore 1.0.7 引导，完美支持在 **ASUS TUF Gaming X570-PLUS** 主板、**AMD Ryzen 7 5800X3D** 处理器与 **AMD Radeon RX 560** 独立显卡平台上运行 **macOS Tahoe (15.x / 26.x)** 与 **macOS Sequoia (15.x)**。
+本项目基于 OpenCore 1.0.4+ 引导，完美支持在 **ASUS TUF Gaming X570-PLUS** 主板、**AMD Ryzen 7 5800X3D** 处理器与 **AMD Radeon RX 560** 独立显卡平台上运行 **macOS Tahoe (15.x / 26.x)** 与 **macOS Sequoia (15.x)**。
 
 本配置针对 macOS Sequoia 和 Tahoe 系统进行了深度的适配与调优，集成了原生电源管理、板载 Realtek ALCS1200A 声卡驱动，并通过 OCLP-Mod 免驱打补丁方式完美复活博通 BCM4360 无线网卡和蓝牙。
 
