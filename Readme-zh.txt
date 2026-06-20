@@ -6,7 +6,7 @@
 
 ## 🌎 语言版本链接
 * **中文说明文件 (Chinese Version)：** [Readme-zh.txt](./Readme-zh.txt)
-* **英文说明文件 (English Version)：** [README.txt](./README.txt)
+* **英文说明文件 (English Version)：** [Readme.txt](./Readme.txt)
 
 ---
 
